@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  name        String
+  shortDescr  String
+  description String
+  category    Category @default(Game)
+  visits      String
+  downloads   Int
+  revenue     Float
+  stars       Int
+  techStack   String
+  license     String
+  createdAt   DateTime
+  updatedAt   DateTime
+  size        String
+  links       Link[]
+  assets      Asset[]
+}
+
+model Link {
+  id        Int     @id @default(autoincrement())
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId Int
+  name      String
+  url       String
+}
+
+model Asset {
+  id        Int        @id @default(autoincrement())
+  project   Project    @relation(fields: [projectId], references: [id])
+  projectId Int
+  type      FileFormat @default(Image)
+  path      String
+  alt       String?
+  hash      String?
+}
+
+enum Category {
+  Game
+  Webdev
+  App
+  Bot
+  Localization
+}
+
+enum FileFormat {
+  Image
+  Video
+}
