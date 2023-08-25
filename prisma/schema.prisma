@@ -45,6 +45,7 @@ model Asset {
   path      String
   alt       String?
   hash      String?
+  role      Role       @default(Screenshot)
 }
 
 enum Category {
@@ -58,4 +59,10 @@ enum Category {
 enum FileFormat {
   Image
   Video
+}
+
+enum Role {
+  Card
+  Banner
+  Screenshot
 }

@@ -11,8 +11,16 @@ export class ProjectsService {
                 select: {
                     id: true,
                     name: true,
-                    cardDescr: true,
-                    cardImg: true
+                    shortDescr: true,
+                    assets: {
+                        select: {
+                            path: true,
+                            hash: true
+                        },
+                        where: {
+                            role: 'Card'
+                        }
+                    }
                 }
             });
             return projectInfo;
@@ -30,9 +38,7 @@ export class ProjectsService {
                 }
             });
 
-            delete projectInfo.cardDescr;
-            delete projectInfo.cardImg;
-
+            delete projectInfo.shortDescr;
             return projectInfo;
         }
         catch (error) {
