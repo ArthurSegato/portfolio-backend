@@ -2,13 +2,16 @@ import {
     IsEmail,
     IsNotEmpty,
     IsOptional,
+    IsPhoneNumber,
     IsString,
+    Length,
 } from 'class-validator';
 
 export class ContactDto {
 
     @IsNotEmpty()
     @IsString()
+    @Length(2, 20)
     name: string;
 
     @IsNotEmpty()
@@ -16,7 +19,7 @@ export class ContactDto {
     email: string;
 
     @IsOptional()
-    @IsString()
+    @IsPhoneNumber()
     phone: string;
 
     @IsNotEmpty()

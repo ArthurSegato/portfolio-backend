@@ -11,7 +11,7 @@ export class ContactService {
       // Omite o numero de telefone do webhook
       if (dto.phone === undefined || dto.phone === null) dto.phone = ''
 
-      const url = this.config.get('WEBHOOK_URL');
+      const url = this.config.get('CONTACT_URL');
 
       fetch(url, {
         method: 'POST',
@@ -19,7 +19,28 @@ export class ContactService {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          "content": `${dto.name} ${dto.email} ${dto.phone} ${dto.message}`
+          "embeds": [
+            {
+              "fields": [{
+                "name": "Name",
+                "value": `${dto.name}`
+              },
+              {
+                "name": "Email",
+                "value": `${dto.email}`,
+                "inline": true
+              },
+              {
+                "name": "Phone",
+                "value": `${dto.phone}`,
+                "inline": true
+              },
+              {
+                "name": "Message",
+                "value": `${dto.message}`
+              }]
+            }
+          ]
         })
       })
 
