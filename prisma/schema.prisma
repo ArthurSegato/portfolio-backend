@@ -11,22 +11,22 @@ datasource db {
 }
 
 model Project {
-  id          Int      @id @default(autoincrement())
-  name        String
-  shortDescr  String
-  description String
-  category    Category @default(Game)
-  visits      String
-  downloads   Int
-  revenue     Float
-  stars       Int
-  techStack   String
-  license     String
-  createdAt   DateTime
-  updatedAt   DateTime
-  size        String
-  links       Link[]
-  assets      Asset[]
+  id              Int      @id @default(autoincrement())
+  name            String
+  description     String
+  longDescription String
+  category        Category
+  visits          String
+  downloads       Int
+  revenue         Float
+  stars           Int
+  techStack       String[]
+  license         String
+  size            String
+  createdAt       DateTime
+  updatedAt       DateTime
+  links           Link[]
+  assets          Asset[]
 }
 
 model Link {
@@ -41,28 +41,31 @@ model Asset {
   id        Int        @id @default(autoincrement())
   project   Project    @relation(fields: [projectId], references: [id])
   projectId Int
-  type      FileFormat @default(Image)
+  type      FileFormat
   path      String
   alt       String?
   hash      String?
-  role      Role       @default(Screenshot)
+  role      Role
 }
 
 enum Category {
-  Game
-  Webdev
-  App
-  Bot
-  Localization
+  GAMEDEV
+  WEBDEV
+  MOBILE
+  BOT
+  LOCALIZATION
+  UI
+  UX
+  DESIGN
 }
 
 enum FileFormat {
-  Image
-  Video
+  IMAGE
+  VIDEO
 }
 
 enum Role {
-  Card
-  Banner
-  Screenshot
+  CARD
+  BANNER
+  MEDIA
 }
