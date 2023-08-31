@@ -16,13 +16,14 @@ model Project {
   description     String
   longDescription String
   category        Category
-  visits          String
+  visits          Int
   downloads       Int
   revenue         Float
   stars           Int
   techStack       String[]
   license         String
-  size            String
+  size            Float
+  sizeUnit        Unit
   createdAt       DateTime
   updatedAt       DateTime
   links           Link[]
@@ -44,7 +45,6 @@ model Asset {
   type      FileFormat
   path      String
   alt       String?
-  hash      String?
   role      Role
 }
 
@@ -68,4 +68,11 @@ enum Role {
   CARD
   BANNER
   MEDIA
+}
+
+enum Unit {
+  B
+  KB
+  MB
+  GB
 }

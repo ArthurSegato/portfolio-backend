@@ -1,19 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { ContactDto } from './dto/contact.dto';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ContactService {
   constructor(private config: ConfigService) { }
 
-  async send(dto: ContactDto) {
+  async sendDiscordWebHook(contactInfo) {
     try {
-      // Omite o numero de telefone do webhook
-      if (dto.phone === undefined || dto.phone === null) dto.phone = ''
+      if (contactInfo.phone === undefined || contactInfo.phone === null) contactInfo.phone = 'N/A'
 
-      const url = this.config.get('CONTACT_URL');
-
-      fetch(url, {
+      fetch(this.config.get('CONTACT_ENDPOINT'), {
         method: 'POST',
         headers: {
           "Content-Type": "application/json"
@@ -23,21 +19,21 @@ export class ContactService {
             {
               "fields": [{
                 "name": "Name",
-                "value": `${dto.name}`
+                "value": `${contactInfo.name}`
               },
               {
                 "name": "Email",
-                "value": `${dto.email}`,
+                "value": `${contactInfo.email}`,
                 "inline": true
               },
               {
                 "name": "Phone",
-                "value": `${dto.phone}`,
+                "value": `${contactInfo.phone}`,
                 "inline": true
               },
               {
                 "name": "Message",
-                "value": `${dto.message}`
+                "value": `${contactInfo.message}`
               }]
             }
           ]

@@ -6,9 +6,9 @@ import { ContactDto } from './dto/contact.dto';
 export class ContactController {
   constructor(private readonly contactService: ContactService) { }
 
-  @HttpCode(HttpStatus.CREATED)
+  @HttpCode(HttpStatus.ACCEPTED)
   @Post()
-  send(@Body() dto: ContactDto) {
-    return this.contactService.send(dto);
+  sendDiscordWebHook(@Body() dto: ContactDto) {
+    return this.contactService.sendDiscordWebHook(dto);
   }
 }
