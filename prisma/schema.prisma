@@ -39,11 +39,11 @@ model Link {
 }
 
 model Asset {
-  id        Int        @id @default(autoincrement())
-  project   Project    @relation(fields: [projectId], references: [id])
+  id        Int     @id @default(autoincrement())
+  project   Project @relation(fields: [projectId], references: [id])
   projectId Int
-  type      FileFormat
-  path      String
+  mimetype  String
+  name      String
   alt       String?
   role      Role
 }
@@ -57,11 +57,6 @@ enum Category {
   UI
   UX
   DESIGN
-}
-
-enum FileFormat {
-  IMAGE
-  VIDEO
 }
 
 enum Role {

@@ -6,7 +6,9 @@ import {
     IsInt,
     IsNotEmpty,
     IsNumber,
+    IsOptional,
     IsString,
+    IsStrongPassword,
     IsUrl,
     ValidateNested,
 } from 'class-validator';
@@ -41,6 +43,10 @@ export class LinkDto {
 }
 
 export class ProjectsDto {
+
+    @IsNotEmpty()
+    @IsStrongPassword()
+    key: string
 
     @IsNotEmpty()
     @IsString()
@@ -105,6 +111,23 @@ export class ProjectsDto {
 }
 
 export class FileUploadDto {
+
     @IsNotEmpty()
-    id: number
+    @IsStrongPassword()
+    @Type(() => String)
+    key: string
+
+    @IsNotEmpty()
+    @IsNumber()
+    @Type(() => Number)
+    projectId: number
+
+    @IsNotEmpty()
+    @IsString()
+    @Type(() => String)
+    role: string
+
+    @IsOptional()
+    @Type(() => String)
+    alt: string
 }

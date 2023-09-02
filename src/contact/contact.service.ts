@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class ContactService {
     try {
       if (contactInfo.phone === undefined || contactInfo.phone === null) contactInfo.phone = 'N/A'
 
-      fetch(this.config.get('CONTACT_ENDPOINT'), {
+      const response = await fetch(this.config.get('CONTACT_ENDPOINT'), {
         method: 'POST',
         headers: {
           "Content-Type": "application/json"
@@ -39,6 +39,9 @@ export class ContactService {
           ]
         })
       })
+        .then((response) => {
+          if (!response.ok) throw new ServiceUnavailableException('Unable to trigger a discord webhook');
+        })
 
       return { message: 'Your message has been received' };
     }
