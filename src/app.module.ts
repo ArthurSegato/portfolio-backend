@@ -7,7 +7,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ContactModule } from './contact/contact.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { ServeStaticModule } from '@nestjs/serve-static';
+import { ScheduleModule } from '@nestjs/schedule';
 import { join } from 'path';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [ProjectsModule, PrismaModule, ConfigModule.forRoot({
@@ -16,7 +18,7 @@ import { join } from 'path';
     dest: "./upload"
   }), ServeStaticModule.forRoot({
     rootPath: join(__dirname, "..", "upload")
-  })],
+  }), ScheduleModule.forRoot(), TasksModule],
   controllers: [ProjectsController],
   providers: [ProjectsService],
 })

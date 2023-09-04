@@ -31,6 +31,7 @@ enum Unit {
     GB
 }
 
+
 export class LinkDto {
 
     @IsNotEmpty()
@@ -64,35 +65,27 @@ export class ProjectsDto {
     @IsEnum(Category)
     category: Category;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsInt()
     visits: number;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsInt()
     downloads: number;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
     revenue: number;
-
-    @IsNotEmpty()
-    @IsInt()
-    stars: number;
 
     @IsNotEmpty()
     @IsArray()
     techStack: string;
 
-    @IsNotEmpty()
-    @IsString()
-    license: string;
-
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
     size: number;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsEnum(Unit)
     sizeUnit: Unit;
 
@@ -100,7 +93,7 @@ export class ProjectsDto {
     @IsDateString()
     createdAt: string;
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsDateString()
     updatedAt: string;
 

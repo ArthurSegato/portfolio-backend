@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "Category" AS ENUM ('GAMEDEV', 'WEBDEV', 'MOBILE', 'BOT', 'LOCALIZATION', 'UI', 'UX', 'DESIGN');
+CREATE TYPE "Category" AS ENUM ('GAMEDEV', 'WEBDEV', 'MOBILE', 'BOT', 'LOCALIZATION', 'UIUX', 'DESIGN');
 
 -- CreateEnum
 CREATE TYPE "Role" AS ENUM ('CARD', 'BANNER', 'MEDIA');
@@ -19,13 +19,22 @@ CREATE TABLE "Project" (
     "revenue" DOUBLE PRECISION NOT NULL,
     "stars" INTEGER NOT NULL,
     "techStack" TEXT[],
-    "license" TEXT NOT NULL,
     "size" DOUBLE PRECISION NOT NULL,
     "sizeUnit" "Unit" NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Project_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "License" (
+    "id" SERIAL NOT NULL,
+    "projectId" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
+
+    CONSTRAINT "License_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -49,6 +58,9 @@ CREATE TABLE "Asset" (
 
     CONSTRAINT "Asset_pkey" PRIMARY KEY ("id")
 );
+
+-- AddForeignKey
+ALTER TABLE "License" ADD CONSTRAINT "License_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Link" ADD CONSTRAINT "Link_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

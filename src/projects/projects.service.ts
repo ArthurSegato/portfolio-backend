@@ -8,7 +8,7 @@ export class ProjectsService {
 
     async findAll() {
         try {
-            const projectsList = await this.prisma.project.findMany({
+            return await this.prisma.project.findMany({
                 select: {
                     id: true,
                     name: true,
@@ -24,7 +24,6 @@ export class ProjectsService {
                     }
                 }
             });
-            return projectsList;
         }
         catch (error) {
             throw error;
@@ -33,7 +32,7 @@ export class ProjectsService {
 
     async findOne(id) {
         try {
-            const projectData = await this.prisma.project.findUnique({
+            return await this.prisma.project.findUnique({
                 where: {
                     id
                 },
@@ -46,7 +45,12 @@ export class ProjectsService {
                     revenue: true,
                     stars: true,
                     techStack: true,
-                    license: true,
+                    licenses: {
+                        select: {
+                            name: true,
+                            url: true
+                        }
+                    },
                     size: true,
                     sizeUnit: true,
                     createdAt: true,
@@ -72,8 +76,6 @@ export class ProjectsService {
                     }
                 }
             });
-
-            return projectData;
         }
         catch (error) {
             throw error;
@@ -84,22 +86,22 @@ export class ProjectsService {
         try {
             if (project.key !== this.config.get('KEY')) throw new ForbiddenException('Invalid key');
 
-            const projectData = this.prisma.project.create({
+            return this.prisma.project.create({
                 data: {
                     name: project.name,
                     description: project.description,
                     longDescription: project.longDescription,
                     category: project.category,
-                    visits: project.visits,
-                    downloads: project.downloads,
-                    revenue: project.revenue,
-                    stars: project.stars,
-                    techStack: project.techStack,
-                    license: project.license,
-                    size: project.size,
-                    sizeUnit: project.sizeUnit,
+                    visits: project.visits != null ? project.visits : undefined,
+                    downloads: project.downloads != null ? project.downloads : undefined,
+                    revenue: project.revenue != null ? project.revenue : undefined,
+                    stars: undefined,
+                    techStack: project.techStack != null ? project.techStack : undefined,
+                    licenses: undefined,
+                    size: project.size != null ? project.size : undefined,
+                    sizeUnit: project.sizeUnit != null ? project.sizeUnit : undefined,
                     createdAt: project.createdAt,
-                    updatedAt: project.updatedAt,
+                    updatedAt: undefined,
                     links: {
                         createMany: {
                             data: project.links
@@ -107,8 +109,6 @@ export class ProjectsService {
                     }
                 }
             });
-
-            return projectData
         }
         catch (error) {
             throw error;
@@ -118,7 +118,7 @@ export class ProjectsService {
     async uploadAssets(file, data) {
         try {
             if (data.key !== this.config.get('KEY')) throw new ForbiddenException('Invalid key');
-            const projectAsset = this.prisma.asset.create({
+            return this.prisma.asset.create({
                 data: {
                     projectId: parseInt(data.projectId),
                     mimetype: file.mimetype,
@@ -127,7 +127,6 @@ export class ProjectsService {
                     alt: data.alt
                 }
             })
-            return projectAsset;
         }
         catch (error) {
             throw error;
