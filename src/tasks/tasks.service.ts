@@ -17,6 +17,7 @@ export class TasksService {
             const projectsList = await this.prisma.project.findMany({
                 select: {
                     id: true,
+                    licenses: true,
                     links: {
                         select: {
                             url: true
@@ -34,7 +35,6 @@ export class TasksService {
                             githubLinks.push({
                                 id: element.id,
                                 repo_name: [link.url.match(/\/([^/]+)$/)[1]],
-                                licenses: [],
                                 stars: 0,
                                 createdAt: undefined,
                                 updatedAt: undefined
@@ -51,6 +51,7 @@ export class TasksService {
                     }).then((response) => {
                         if (response.ok) return response.json()
                     }).then((data) => {
+                        if () { }
                         if (data.license !== null) {
                             if (!githubLinks[i].licenses.some(el => el.name === data.license.spdx_id)) {
                                 githubLinks[i].licenses.push({
