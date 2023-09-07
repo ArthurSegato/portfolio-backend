@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -13,15 +13,7 @@ export class ProjectsService {
                     id: true,
                     name: true,
                     description: true,
-                    assets: {
-                        select: {
-                            name: true,
-                            alt: true
-                        },
-                        where: {
-                            role: 'CARD'
-                        }
-                    }
+                    card: true
                 }
             });
         }
@@ -32,7 +24,7 @@ export class ProjectsService {
 
     async findOne(id) {
         try {
-            return await this.prisma.project.findUnique({
+            const dbData = await this.prisma.project.findUnique({
                 where: {
                     id
                 },
@@ -43,39 +35,102 @@ export class ProjectsService {
                     visits: true,
                     downloads: true,
                     revenue: true,
-                    stars: true,
                     techStack: true,
-                    licenses: {
-                        select: {
-                            name: true,
-                            url: true
-                        }
-                    },
                     size: true,
                     sizeUnit: true,
-                    createdAt: true,
-                    updatedAt: true,
                     links: {
                         select: {
                             name: true,
                             url: true
                         }
                     },
+                    cover: {
+                        select: {
+                            mimetype: true,
+                            url: true
+                        }
+                    },
                     assets: {
                         select: {
                             mimetype: true,
-                            name: true,
-                            alt: true,
-                            role: true
+                            url: true,
+                            alt: true
                         },
-                        where: {
-                            NOT: {
-                                role: "CARD"
-                            }
-                        }
                     }
                 }
             });
+
+            if (dbData === null) throw new NotFoundException('There is no projects with this ID');
+
+            const githubUrlRegex = /^https:\/\/github\.com\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+$/;
+            const youtubeUrlRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|youtu\.be\/|user\/\S+\/|user\/\S+\/videos\?v=)([a-zA-Z0-9_-]{11})/;
+            const github = {
+                stars: 0,
+                created_at: null,
+                updated_at: null,
+                size: dbData.size,
+                size_unit: dbData.sizeUnit,
+                licenses: [],
+            }
+            const youtube = {
+                views: 0,
+                likes: 0,
+                comments: 0
+            }
+
+            for (let i = 0; i < dbData.links.length; i++) {
+                if (githubUrlRegex.test(dbData.links[i].url)) {
+                    await fetch(`https://api.github.com/repos/ArthurSegato/${dbData.links[i].url.match(/\/([^/]+)$/)[1]}`, {
+                        method: 'GET',
+                        headers: {
+                            "Authorization": `Bearer ${this.config.get('GITHUB_API_KEY')} `
+                        }
+                    }).then((response) => {
+                        if (response.ok) return response.json()
+                    }).then((data) => {
+                        github.stars += data.stargazers_count;
+
+                        if (data.license !== null) {
+                            github.licenses.push({
+                                name: data.license.spdx_id,
+                                url: `https://choosealicense.com/licenses/${data.license.key}`
+                            })
+                        }
+
+                        if (github.created_at === null || github.created_at < data.created_at) github.created_at = data.created_at.split('T')[0];
+
+                        if (github.updated_at === null || github.created_at > data.created_at) github.updated_at = data.updated_at.split('T')[0];
+                    })
+                }
+                if (youtubeUrlRegex.test(dbData.links[i].url)) {
+                    await fetch(`https://www.googleapis.com/youtube/v3/videos?key=${this.config.get('YOUTUBE_API_KEY')}&id=${dbData.links[i].url.match(youtubeUrlRegex)[1]}&part=statistics`, {
+                        method: 'GET'
+                    }).then((response) => {
+                        if (response.ok) return response.json()
+                    }).then((data) => {
+                        if (data.items.length > 0) {
+                            youtube.views += data.items[0].statistics.viewCount;
+                            youtube.likes += data.items[0].statistics.likeCount;
+                            youtube.comments += data.items[0].statistics.commentCount;
+                        }
+                    })
+                }
+            };
+
+            return {
+                name: dbData.name,
+                long_description: dbData.longDescription,
+                category: dbData.category,
+                visits: dbData.visits,
+                downloads: dbData.downloads,
+                revenue: dbData.revenue === null ? 0.0 : dbData.revenue,
+                youtube: youtube,
+                github: github,
+                tech_stack: dbData.techStack,
+                links: dbData.links,
+                cover: dbData.cover,
+                assets: dbData.assets
+            };
         }
         catch (error) {
             throw error;
@@ -84,9 +139,9 @@ export class ProjectsService {
 
     async create(project) {
         try {
-            if (project.key !== this.config.get('KEY')) throw new ForbiddenException('Invalid key');
+            if (project.key !== this.config.get('PASSWORD')) throw new ForbiddenException('Invalid key');
 
-            return this.prisma.project.create({
+            return await this.prisma.project.create({
                 data: {
                     name: project.name,
                     description: project.description,
@@ -95,13 +150,9 @@ export class ProjectsService {
                     visits: project.visits != null ? project.visits : undefined,
                     downloads: project.downloads != null ? project.downloads : undefined,
                     revenue: project.revenue != null ? project.revenue : undefined,
-                    stars: undefined,
                     techStack: project.techStack != null ? project.techStack : undefined,
-                    licenses: undefined,
                     size: project.size != null ? project.size : undefined,
                     sizeUnit: project.sizeUnit != null ? project.sizeUnit : undefined,
-                    createdAt: project.createdAt,
-                    updatedAt: undefined,
                     links: {
                         createMany: {
                             data: project.links
@@ -117,13 +168,31 @@ export class ProjectsService {
 
     async uploadAssets(file, data) {
         try {
-            if (data.key !== this.config.get('KEY')) throw new ForbiddenException('Invalid key');
-            return this.prisma.asset.create({
+            if (data.key !== this.config.get('PASSWORD')) throw new ForbiddenException('Invalid key');
+
+            const apiPath = this.config.get('API_PATH')
+
+            if (data.role === "card") return await this.prisma.card.create({
                 data: {
                     projectId: parseInt(data.projectId),
                     mimetype: file.mimetype,
-                    name: file.filename,
-                    role: data.role,
+                    url: `${apiPath}/${file.filename}`,
+                }
+            });
+
+            if (data.role === "cover") return await this.prisma.cover.create({
+                data: {
+                    projectId: parseInt(data.projectId),
+                    mimetype: file.mimetype,
+                    url: `${apiPath}/${file.filename}`,
+                }
+            });
+
+            else return await this.prisma.asset.create({
+                data: {
+                    projectId: parseInt(data.projectId),
+                    mimetype: file.mimetype,
+                    url: `${apiPath}/${file.filename}`,
                     alt: data.alt
                 }
             })

@@ -11,7 +11,7 @@ datasource db {
 }
 
 model Project {
-  id              Int       @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   name            String
   description     String
   longDescription String
@@ -19,23 +19,13 @@ model Project {
   visits          Int?
   downloads       Int?
   revenue         Float?
-  stars           Int?
   techStack       String[]
   size            Float?
   sizeUnit        Unit?
-  createdAt       DateTime
-  updatedAt       DateTime?
   links           Link[]
+  card            Card?
+  cover           Cover?
   assets          Asset[]
-  licenses        License[]
-}
-
-model License {
-  id        Int     @id @default(autoincrement())
-  project   Project @relation(fields: [projectId], references: [id])
-  projectId Int
-  name      String
-  url       String
 }
 
 model Link {
@@ -46,14 +36,29 @@ model Link {
   url       String
 }
 
+model Card {
+  id        Int     @id @default(autoincrement())
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId Int     @unique
+  mimetype  String
+  url       String
+}
+
+model Cover {
+  id        Int     @id @default(autoincrement())
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId Int     @unique
+  mimetype  String
+  url       String
+}
+
 model Asset {
   id        Int     @id @default(autoincrement())
   project   Project @relation(fields: [projectId], references: [id])
   projectId Int
   mimetype  String
-  name      String
-  alt       String?
-  role      Role
+  url       String
+  alt       String
 }
 
 enum Category {
@@ -64,12 +69,6 @@ enum Category {
   LOCALIZATION
   UIUX
   DESIGN
-}
-
-enum Role {
-  CARD
-  BANNER
-  MEDIA
 }
 
 enum Unit {

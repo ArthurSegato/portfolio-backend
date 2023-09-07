@@ -7,9 +7,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ContactModule } from './contact/contact.module';
 import { MulterModule } from '@nestjs/platform-express';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { ScheduleModule } from '@nestjs/schedule';
+import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { join } from 'path';
-import { TasksModule } from './tasks/tasks.module';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 @Module({
   imports: [ProjectsModule, PrismaModule, ConfigModule.forRoot({
@@ -18,8 +18,11 @@ import { TasksModule } from './tasks/tasks.module';
     dest: "./upload"
   }), ServeStaticModule.forRoot({
     rootPath: join(__dirname, "..", "upload")
-  }), ScheduleModule.forRoot(), TasksModule],
+  }), /*CacheModule.register()*/],
   controllers: [ProjectsController],
-  providers: [ProjectsService],
+  providers: [ProjectsService, /*{
+    provide: APP_INTERCEPTOR,
+    useClass: CacheInterceptor
+  }*/],
 })
 export class AppModule { }

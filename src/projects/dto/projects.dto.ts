@@ -1,7 +1,6 @@
 import { Type } from 'class-transformer';
 import {
     IsArray,
-    IsDateString,
     IsEnum,
     IsInt,
     IsNotEmpty,
@@ -31,9 +30,7 @@ enum Unit {
     GB
 }
 
-
 export class LinkDto {
-
     @IsNotEmpty()
     @IsString()
     name: string;
@@ -44,7 +41,6 @@ export class LinkDto {
 }
 
 export class ProjectsDto {
-
     @IsNotEmpty()
     @IsStrongPassword()
     key: string
@@ -88,14 +84,6 @@ export class ProjectsDto {
     @IsOptional()
     @IsEnum(Unit)
     sizeUnit: Unit;
-
-    @IsNotEmpty()
-    @IsDateString()
-    createdAt: string;
-
-    @IsOptional()
-    @IsDateString()
-    updatedAt: string;
 
     @IsNotEmpty()
     @ValidateNested()

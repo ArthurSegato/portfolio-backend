@@ -9,7 +9,7 @@ export class ContactService {
     try {
       if (contactInfo.phone === undefined || contactInfo.phone === null) contactInfo.phone = 'N/A'
 
-      const response = await fetch(this.config.get('CONTACT_ENDPOINT'), {
+      const response = await fetch(this.config.get('CONTACT_WEBHOOK'), {
         method: 'POST',
         headers: {
           "Content-Type": "application/json"
