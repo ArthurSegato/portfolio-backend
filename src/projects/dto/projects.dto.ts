@@ -89,9 +89,13 @@ export class ProjectsDto {
     @ValidateNested()
     @Type(() => LinkDto)
     links: LinkDto[];
+
+    @IsOptional()
+    @IsArray()
+    embeds: string;
 }
 
-export class FileUploadDto {
+export class AssetDto {
 
     @IsNotEmpty()
     @IsStrongPassword()
@@ -104,11 +108,19 @@ export class FileUploadDto {
     projectId: number
 
     @IsNotEmpty()
-    @IsString()
-    @Type(() => String)
-    role: string
-
-    @IsOptional()
     @Type(() => String)
     alt: string
+}
+
+export class CardCoverDto {
+
+    @IsNotEmpty()
+    @IsStrongPassword()
+    @Type(() => String)
+    key: string
+
+    @IsNotEmpty()
+    @IsNumber()
+    @Type(() => Number)
+    projectId: number
 }

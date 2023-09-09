@@ -13,7 +13,12 @@ export class ProjectsService {
                     id: true,
                     name: true,
                     description: true,
-                    card: true
+                    card: {
+                        select: {
+                            mimetype: true,
+                            url: true
+                        }
+                    }
                 }
             });
         }
@@ -56,7 +61,8 @@ export class ProjectsService {
                             url: true,
                             alt: true
                         },
-                    }
+                    },
+                    embeds: true
                 }
             });
 
@@ -65,17 +71,17 @@ export class ProjectsService {
             const githubUrlRegex = /^https:\/\/github\.com\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+$/;
             const youtubeUrlRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|youtu\.be\/|user\/\S+\/|user\/\S+\/videos\?v=)([a-zA-Z0-9_-]{11})/;
             const github = {
-                stars: 0,
+                stars: null,
                 created_at: null,
                 updated_at: null,
                 size: dbData.size,
                 size_unit: dbData.sizeUnit,
-                licenses: [],
+                licenses: null,
             }
             const youtube = {
-                views: 0,
-                likes: 0,
-                comments: 0
+                views: null,
+                likes: null,
+                comments: null
             }
 
             for (let i = 0; i < dbData.links.length; i++) {
@@ -91,10 +97,18 @@ export class ProjectsService {
                         github.stars += data.stargazers_count;
 
                         if (data.license !== null) {
-                            github.licenses.push({
-                                name: data.license.spdx_id,
-                                url: `https://choosealicense.com/licenses/${data.license.key}`
-                            })
+                            if (github.licenses === null) {
+                                github.licenses = [{
+                                    name: data.license.spdx_id,
+                                    url: `https://choosealicense.com/licenses/${data.license.key}`
+                                }]
+                            } else {
+                                github.licenses.push({
+                                    name: data.license.spdx_id,
+                                    url: `https://choosealicense.com/licenses/${data.license.key}`
+                                })
+                            }
+
                         }
 
                         if (github.created_at === null || github.created_at < data.created_at) github.created_at = data.created_at.split('T')[0];
@@ -109,9 +123,9 @@ export class ProjectsService {
                         if (response.ok) return response.json()
                     }).then((data) => {
                         if (data.items.length > 0) {
-                            youtube.views += data.items[0].statistics.viewCount;
-                            youtube.likes += data.items[0].statistics.likeCount;
-                            youtube.comments += data.items[0].statistics.commentCount;
+                            youtube.views += parseInt(data.items[0].statistics.viewCount);
+                            youtube.likes += parseInt(data.items[0].statistics.likeCount);
+                            youtube.comments += parseInt(data.items[0].statistics.commentCount);
                         }
                     })
                 }
@@ -123,13 +137,14 @@ export class ProjectsService {
                 category: dbData.category,
                 visits: dbData.visits,
                 downloads: dbData.downloads,
-                revenue: dbData.revenue === null ? 0.0 : dbData.revenue,
+                revenue: dbData.revenue,
                 youtube: youtube,
                 github: github,
                 tech_stack: dbData.techStack,
                 links: dbData.links,
                 cover: dbData.cover,
-                assets: dbData.assets
+                assets: dbData.assets,
+                embeds: dbData.embeds
             };
         }
         catch (error) {
@@ -157,7 +172,8 @@ export class ProjectsService {
                         createMany: {
                             data: project.links
                         }
-                    }
+                    },
+                    embeds: project.embeds
                 }
             });
         }
@@ -166,39 +182,89 @@ export class ProjectsService {
         }
     }
 
-    async uploadAssets(file, data) {
+    async uploadCard(file, data) {
         try {
             if (data.key !== this.config.get('PASSWORD')) throw new ForbiddenException('Invalid key');
 
             const apiPath = this.config.get('API_PATH')
 
-            if (data.role === "card") return await this.prisma.card.create({
+            const cardUpload = await this.prisma.card.create({
                 data: {
                     projectId: parseInt(data.projectId),
+                    name: file.filename,
                     mimetype: file.mimetype,
                     url: `${apiPath}/${file.filename}`,
                 }
             });
 
-            if (data.role === "cover") return await this.prisma.cover.create({
+            return cardUpload
+        }
+        catch (error) {
+            switch (error.code) {
+                case 'P2002':
+                    throw new ForbiddenException('A card image has already been set');
+                case 'P2003':
+                    throw new NotFoundException('There is no projects with this ID');
+                default:
+                    throw error;
+            }
+        }
+    }
+
+    async uploadCover(file, data) {
+        try {
+            if (data.key !== this.config.get('PASSWORD')) throw new ForbiddenException('Invalid key');
+
+            const apiPath = this.config.get('API_PATH')
+
+            const coverUpload = await this.prisma.cover.create({
                 data: {
                     projectId: parseInt(data.projectId),
+                    name: file.filename,
                     mimetype: file.mimetype,
                     url: `${apiPath}/${file.filename}`,
                 }
             });
 
-            else return await this.prisma.asset.create({
+            return coverUpload
+        }
+        catch (error) {
+            switch (error.code) {
+                case 'P2002':
+                    throw new ForbiddenException('A cover image has already been set');
+                case 'P2003':
+                    throw new NotFoundException('There is no projects with this ID');
+                default:
+                    throw error;
+            }
+        }
+    }
+
+    async uploadAsset(file, data) {
+        try {
+            if (data.key !== this.config.get('PASSWORD')) throw new ForbiddenException('Invalid key');
+
+            const apiPath = this.config.get('API_PATH')
+
+            const assetUpload = await this.prisma.asset.create({
                 data: {
                     projectId: parseInt(data.projectId),
+                    name: file.filename,
                     mimetype: file.mimetype,
                     url: `${apiPath}/${file.filename}`,
                     alt: data.alt
                 }
-            })
+            });
+
+            return assetUpload
         }
         catch (error) {
-            throw error;
+            switch (error.code) {
+                case 'P2003':
+                    throw new NotFoundException('There is no projects with this ID');
+                default:
+                    throw error;
+            }
         }
     }
 }

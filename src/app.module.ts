@@ -10,15 +10,17 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { join } from 'path';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [ProjectsModule, PrismaModule, ConfigModule.forRoot({
     isGlobal: true
   }), ContactModule, MulterModule.register({
-    dest: "./upload"
+    dest: "./public"
   }), ServeStaticModule.forRoot({
-    rootPath: join(__dirname, "..", "upload")
-  }), /*CacheModule.register()*/],
+    rootPath: join(__dirname, "..", "public")
+  }), /*CacheModule.register()*/ ScheduleModule.forRoot(), TasksModule],
   controllers: [ProjectsController],
   providers: [ProjectsService, /*{
     provide: APP_INTERCEPTOR,

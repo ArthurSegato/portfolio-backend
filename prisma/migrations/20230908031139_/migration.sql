@@ -35,6 +35,7 @@ CREATE TABLE "Link" (
 CREATE TABLE "Card" (
     "id" SERIAL NOT NULL,
     "projectId" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
     "mimetype" TEXT NOT NULL,
     "url" TEXT NOT NULL,
 
@@ -45,6 +46,7 @@ CREATE TABLE "Card" (
 CREATE TABLE "Cover" (
     "id" SERIAL NOT NULL,
     "projectId" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
     "mimetype" TEXT NOT NULL,
     "url" TEXT NOT NULL,
 
@@ -55,6 +57,7 @@ CREATE TABLE "Cover" (
 CREATE TABLE "Asset" (
     "id" SERIAL NOT NULL,
     "projectId" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
     "mimetype" TEXT NOT NULL,
     "url" TEXT NOT NULL,
     "alt" TEXT NOT NULL,
