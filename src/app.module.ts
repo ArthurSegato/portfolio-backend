@@ -10,8 +10,6 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { join } from 'path';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { ScheduleModule } from '@nestjs/schedule';
-import { TasksModule } from './tasks/tasks.module';
 
 @Module({
   imports: [ProjectsModule, PrismaModule, ConfigModule.forRoot({
@@ -19,8 +17,9 @@ import { TasksModule } from './tasks/tasks.module';
   }), ContactModule, MulterModule.register({
     dest: "./public"
   }), ServeStaticModule.forRoot({
-    rootPath: join(__dirname, "..", "public")
-  }), /*CacheModule.register()*/ ScheduleModule.forRoot(), TasksModule],
+    rootPath: join(__dirname, "../public"),
+    serveRoot: '/'
+  }), /*CacheModule.register()*/],
   controllers: [ProjectsController],
   providers: [ProjectsService, /*{
     provide: APP_INTERCEPTOR,

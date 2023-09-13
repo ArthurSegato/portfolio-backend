@@ -1,11 +1,18 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { PrismaService } from "src/prisma/prisma.service";
+const fs = require("fs");
 
 @Injectable()
 export class ProjectsService {
-    constructor(private prisma: PrismaService, private config: ConfigService) { }
+    constructor(
+        private prisma: PrismaService,
+        private config: ConfigService,
+    ) {}
 
+    /**
+     * GET DATA SECTION
+     */
     async findAll() {
         try {
             return await this.prisma.project.findMany({
@@ -16,13 +23,12 @@ export class ProjectsService {
                     card: {
                         select: {
                             mimetype: true,
-                            url: true
-                        }
-                    }
-                }
+                            url: true,
+                        },
+                    },
+                },
             });
-        }
-        catch (error) {
+        } catch (error) {
             throw error;
         }
     }
@@ -31,7 +37,7 @@ export class ProjectsService {
         try {
             const dbData = await this.prisma.project.findUnique({
                 where: {
-                    id
+                    id,
                 },
                 select: {
                     name: true,
@@ -46,27 +52,27 @@ export class ProjectsService {
                     links: {
                         select: {
                             name: true,
-                            url: true
-                        }
+                            url: true,
+                        },
                     },
                     cover: {
                         select: {
                             mimetype: true,
-                            url: true
-                        }
+                            url: true,
+                        },
                     },
                     assets: {
                         select: {
                             mimetype: true,
                             url: true,
-                            alt: true
+                            alt: true,
                         },
                     },
-                    embeds: true
-                }
+                    embeds: true,
+                },
             });
 
-            if (dbData === null) throw new NotFoundException('There is no projects with this ID');
+            if (dbData === null) throw new NotFoundException("There is no projects with this ID");
 
             const githubUrlRegex = /^https:\/\/github\.com\/[A-Za-z0-9_-]+\/[A-Za-z0-9_-]+$/;
             const youtubeUrlRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com|youtu\.be)\/(?:watch\?v=|embed\/|v\/|youtu\.be\/|user\/\S+\/|user\/\S+\/videos\?v=)([a-zA-Z0-9_-]{11})/;
@@ -77,59 +83,64 @@ export class ProjectsService {
                 size: dbData.size,
                 size_unit: dbData.sizeUnit,
                 licenses: null,
-            }
+            };
             const youtube = {
                 views: null,
                 likes: null,
-                comments: null
-            }
+                comments: null,
+            };
 
             for (let i = 0; i < dbData.links.length; i++) {
                 if (githubUrlRegex.test(dbData.links[i].url)) {
                     await fetch(`https://api.github.com/repos/ArthurSegato/${dbData.links[i].url.match(/\/([^/]+)$/)[1]}`, {
-                        method: 'GET',
+                        method: "GET",
                         headers: {
-                            "Authorization": `Bearer ${this.config.get('GITHUB_API_KEY')} `
-                        }
-                    }).then((response) => {
-                        if (response.ok) return response.json()
-                    }).then((data) => {
-                        github.stars += data.stargazers_count;
+                            Authorization: `Bearer ${this.config.get("GITHUB_API_KEY")} `,
+                        },
+                    })
+                        .then((response) => {
+                            if (response.ok) return response.json();
+                        })
+                        .then((data) => {
+                            github.stars += data.stargazers_count;
 
-                        if (data.license !== null) {
-                            if (github.licenses === null) {
-                                github.licenses = [{
-                                    name: data.license.spdx_id,
-                                    url: `https://choosealicense.com/licenses/${data.license.key}`
-                                }]
-                            } else {
-                                github.licenses.push({
-                                    name: data.license.spdx_id,
-                                    url: `https://choosealicense.com/licenses/${data.license.key}`
-                                })
+                            if (data.license !== null) {
+                                if (github.licenses === null) {
+                                    github.licenses = [
+                                        {
+                                            name: data.license.spdx_id,
+                                            url: `https://choosealicense.com/licenses/${data.license.key}`,
+                                        },
+                                    ];
+                                } else {
+                                    github.licenses.push({
+                                        name: data.license.spdx_id,
+                                        url: `https://choosealicense.com/licenses/${data.license.key}`,
+                                    });
+                                }
                             }
 
-                        }
+                            if (github.created_at === null || github.created_at < data.created_at) github.created_at = data.created_at.split("T")[0];
 
-                        if (github.created_at === null || github.created_at < data.created_at) github.created_at = data.created_at.split('T')[0];
-
-                        if (github.updated_at === null || github.created_at > data.created_at) github.updated_at = data.updated_at.split('T')[0];
-                    })
+                            if (github.updated_at === null || github.created_at > data.created_at) github.updated_at = data.updated_at.split("T")[0];
+                        });
                 }
                 if (youtubeUrlRegex.test(dbData.links[i].url)) {
-                    await fetch(`https://www.googleapis.com/youtube/v3/videos?key=${this.config.get('YOUTUBE_API_KEY')}&id=${dbData.links[i].url.match(youtubeUrlRegex)[1]}&part=statistics`, {
-                        method: 'GET'
-                    }).then((response) => {
-                        if (response.ok) return response.json()
-                    }).then((data) => {
-                        if (data.items.length > 0) {
-                            youtube.views += parseInt(data.items[0].statistics.viewCount);
-                            youtube.likes += parseInt(data.items[0].statistics.likeCount);
-                            youtube.comments += parseInt(data.items[0].statistics.commentCount);
-                        }
+                    await fetch(`https://www.googleapis.com/youtube/v3/videos?key=${this.config.get("YOUTUBE_API_KEY")}&id=${dbData.links[i].url.match(youtubeUrlRegex)[1]}&part=statistics`, {
+                        method: "GET",
                     })
+                        .then((response) => {
+                            if (response.ok) return response.json();
+                        })
+                        .then((data) => {
+                            if (data.items.length > 0) {
+                                youtube.views += parseInt(data.items[0].statistics.viewCount);
+                                youtube.likes += parseInt(data.items[0].statistics.likeCount);
+                                youtube.comments += parseInt(data.items[0].statistics.commentCount);
+                            }
+                        });
                 }
-            };
+            }
 
             return {
                 name: dbData.name,
@@ -144,17 +155,19 @@ export class ProjectsService {
                 links: dbData.links,
                 cover: dbData.cover,
                 assets: dbData.assets,
-                embeds: dbData.embeds
+                embeds: dbData.embeds,
             };
-        }
-        catch (error) {
+        } catch (error) {
             throw error;
         }
     }
 
+    /**
+     * CREATE DATA SECTION
+     */
     async create(project) {
         try {
-            if (project.key !== this.config.get('PASSWORD')) throw new ForbiddenException('Invalid key');
+            if (project.key !== this.config.get("PASSWORD")) throw new ForbiddenException("Invalid key");
 
             return await this.prisma.project.create({
                 data: {
@@ -170,41 +183,39 @@ export class ProjectsService {
                     sizeUnit: project.sizeUnit != null ? project.sizeUnit : undefined,
                     links: {
                         createMany: {
-                            data: project.links
-                        }
+                            data: project.links,
+                        },
                     },
-                    embeds: project.embeds
-                }
+                    embeds: project.embeds,
+                },
             });
-        }
-        catch (error) {
+        } catch (error) {
             throw error;
         }
     }
 
     async uploadCard(file, data) {
         try {
-            if (data.key !== this.config.get('PASSWORD')) throw new ForbiddenException('Invalid key');
+            if (data.key !== this.config.get("PASSWORD")) throw new ForbiddenException("Invalid key");
 
-            const apiPath = this.config.get('API_PATH')
+            if (!file.mimetype.match(/^(image\/avif|video\/mp4)$/)) throw new ForbiddenException("Invalid file format, it must be 'image/avif' or 'video/mp4'");
 
-            const cardUpload = await this.prisma.card.create({
+            return await this.prisma.card.create({
                 data: {
                     projectId: parseInt(data.projectId),
                     name: file.filename,
                     mimetype: file.mimetype,
-                    url: `${apiPath}/${file.filename}`,
-                }
+                    url: `${this.config.get("API_PATH")}/${file.filename}`,
+                },
             });
-
-            return cardUpload
-        }
-        catch (error) {
+        } catch (error) {
+            // Remove file on error
+            removeFile(file.filename);
             switch (error.code) {
-                case 'P2002':
-                    throw new ForbiddenException('A card image has already been set');
-                case 'P2003':
-                    throw new NotFoundException('There is no projects with this ID');
+                case "P2002":
+                    throw new ForbiddenException("A card image has already been set");
+                case "P2003":
+                    throw new NotFoundException("There are no projects with this ID");
                 default:
                     throw error;
             }
@@ -213,27 +224,26 @@ export class ProjectsService {
 
     async uploadCover(file, data) {
         try {
-            if (data.key !== this.config.get('PASSWORD')) throw new ForbiddenException('Invalid key');
+            if (data.key !== this.config.get("PASSWORD")) throw new ForbiddenException("Invalid key");
 
-            const apiPath = this.config.get('API_PATH')
+            if (!file.mimetype.match(/^(image\/avif|video\/mp4)$/)) throw new ForbiddenException("Invalid file format, it must be 'image/avif' or 'video/mp4'");
 
-            const coverUpload = await this.prisma.cover.create({
+            return await this.prisma.cover.create({
                 data: {
                     projectId: parseInt(data.projectId),
                     name: file.filename,
                     mimetype: file.mimetype,
-                    url: `${apiPath}/${file.filename}`,
-                }
+                    url: `${this.config.get("API_PATH")}/${file.filename}`,
+                },
             });
-
-            return coverUpload
-        }
-        catch (error) {
+        } catch (error) {
+            // Remove file on error
+            removeFile(file.filename);
             switch (error.code) {
-                case 'P2002':
-                    throw new ForbiddenException('A cover image has already been set');
-                case 'P2003':
-                    throw new NotFoundException('There is no projects with this ID');
+                case "P2002":
+                    throw new ForbiddenException("A cover image has already been set");
+                case "P2003":
+                    throw new NotFoundException("There are no projects with this ID");
                 default:
                     throw error;
             }
@@ -242,29 +252,153 @@ export class ProjectsService {
 
     async uploadAsset(file, data) {
         try {
-            if (data.key !== this.config.get('PASSWORD')) throw new ForbiddenException('Invalid key');
+            if (data.key !== this.config.get("PASSWORD")) throw new ForbiddenException("Invalid key");
 
-            const apiPath = this.config.get('API_PATH')
+            if (!file.mimetype.match(/^(image\/avif|video\/mp4)$/)) throw new ForbiddenException("Invalid file format, it must be 'image/avif' or 'video/mp4'");
 
-            const assetUpload = await this.prisma.asset.create({
+            return await this.prisma.asset.create({
                 data: {
                     projectId: parseInt(data.projectId),
                     name: file.filename,
                     mimetype: file.mimetype,
-                    url: `${apiPath}/${file.filename}`,
-                    alt: data.alt
-                }
+                    url: `${this.config.get("API_PATH")}/${file.filename}`,
+                    alt: data.alt,
+                },
+            });
+        } catch (error) {
+            // Remove file on error
+            removeFile(file.filename);
+            switch (error.code) {
+                case "P2003":
+                    throw new NotFoundException("There are no projects with this ID");
+                default:
+                    throw error;
+            }
+        }
+    }
+
+    /**
+     * UPDATE DATA SECTION
+     */
+    async updateCard(file, data) {
+        try {
+            if (data.key !== this.config.get("PASSWORD")) throw new ForbiddenException("Invalid key");
+
+            if (!file.mimetype.match(/^(image\/avif|video\/mp4)$/)) throw new ForbiddenException("Invalid file format, it must be 'image/avif' or 'video/mp4'");
+
+            const oldFile = await this.prisma.card.findUnique({
+                where: {
+                    id: data.id,
+                },
             });
 
-            return assetUpload
-        }
-        catch (error) {
+            if (oldFile === null) throw new NotFoundException("There are no projects with this ID");
+
+            removeFile(oldFile.name);
+
+            return await this.prisma.card.update({
+                where: {
+                    id: parseInt(data.id),
+                },
+                data: {
+                    name: file.filename,
+                    mimetype: file.mimetype,
+                    url: `${this.config.get("API_PATH")}/${file.filename}`,
+                },
+            });
+        } catch (error) {
+            // Remove file on error
+            removeFile(file.filename);
             switch (error.code) {
-                case 'P2003':
-                    throw new NotFoundException('There is no projects with this ID');
+                case "P2025":
+                    throw new NotFoundException("There are no projects with this ID");
+                default:
+                    throw error;
+            }
+        }
+    }
+
+    async updateCover(file, data) {
+        try {
+            if (data.key !== this.config.get("PASSWORD")) throw new ForbiddenException("Invalid key");
+
+            if (!file.mimetype.match(/^(image\/avif|video\/mp4)$/)) throw new ForbiddenException("Invalid file format, it must be 'image/avif' or 'video/mp4'");
+
+            const oldFile = await this.prisma.cover.findUnique({
+                where: {
+                    id: data.id,
+                },
+            });
+
+            if (oldFile === null) throw new NotFoundException("There are no projects with this ID");
+
+            removeFile(oldFile.name);
+
+            return await this.prisma.cover.update({
+                where: {
+                    id: parseInt(data.id),
+                },
+                data: {
+                    name: file.filename,
+                    mimetype: file.mimetype,
+                    url: `${this.config.get("API_PATH")}/${file.filename}`,
+                },
+            });
+        } catch (error) {
+            // Remove file on error
+            removeFile(file.filename);
+            switch (error.code) {
+                case "P2025":
+                    throw new NotFoundException("There is no projects with this ID");
+                default:
+                    throw error;
+            }
+        }
+    }
+
+    async updateAsset(file, data) {
+        try {
+            if (data.key !== this.config.get("PASSWORD")) throw new ForbiddenException("Invalid key");
+
+            if (!file.mimetype.match(/^(image\/avif|video\/mp4)$/)) throw new ForbiddenException("Invalid file format, it must be 'image/avif' or 'video/mp4'");
+
+            const oldFile = await this.prisma.asset.findUnique({
+                where: {
+                    id: data.id,
+                },
+            });
+
+            if (oldFile === null) throw new NotFoundException("There are no projects with this ID");
+
+            removeFile(oldFile.name);
+
+            return await this.prisma.asset.update({
+                where: {
+                    id: parseInt(data.id),
+                },
+                data: {
+                    projectId: parseInt(data.projectId),
+                    name: file.filename,
+                    mimetype: file.mimetype,
+                    url: `${this.config.get("API_PATH")}/${file.filename}`,
+                    alt: data.alt,
+                },
+            });
+        } catch (error) {
+            // Remove file on error
+            removeFile(file.filename);
+            switch (error.code) {
+                case "P2025":
+                    throw new NotFoundException("There are no projects with this ID");
                 default:
                     throw error;
             }
         }
     }
 }
+
+const removeFile = async (fileName) => {
+    fs.unlink(`./public/${fileName}`, (unlinkErr) => {
+        if (unlinkErr) throw unlinkErr;
+    });
+};

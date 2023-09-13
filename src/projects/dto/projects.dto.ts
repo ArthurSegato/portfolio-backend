@@ -94,33 +94,3 @@ export class ProjectsDto {
     @IsArray()
     embeds: string;
 }
-
-export class AssetDto {
-
-    @IsNotEmpty()
-    @IsStrongPassword()
-    @Type(() => String)
-    key: string
-
-    @IsNotEmpty()
-    @IsNumber()
-    @Type(() => Number)
-    projectId: number
-
-    @IsNotEmpty()
-    @Type(() => String)
-    alt: string
-}
-
-export class CardCoverDto {
-
-    @IsNotEmpty()
-    @IsStrongPassword()
-    @Type(() => String)
-    key: string
-
-    @IsNotEmpty()
-    @IsNumber()
-    @Type(() => Number)
-    projectId: number
-}
