@@ -2,14 +2,12 @@ import { Injectable, ServiceUnavailableException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 
 @Injectable()
-export class ContactService {
+export class EastereggService {
     constructor(private config: ConfigService) {}
 
-    async sendDiscordWebHook(contactInfo) {
+    async sendDiscordWebHook(dto) {
         try {
-            if (contactInfo.phone === undefined || contactInfo.phone === null) contactInfo.phone = "N/A";
-
-            const response = await fetch(this.config.get("CONTACT_WEBHOOK"), {
+            const response = await fetch(this.config.get("EASTEREGG_WEBHOOK"), {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -19,22 +17,8 @@ export class ContactService {
                         {
                             fields: [
                                 {
-                                    name: "Name",
-                                    value: `${contactInfo.name}`,
-                                },
-                                {
-                                    name: "Email",
-                                    value: `${contactInfo.email}`,
-                                    inline: true,
-                                },
-                                {
-                                    name: "Phone",
-                                    value: `${contactInfo.phone}`,
-                                    inline: true,
-                                },
-                                {
                                     name: "Message",
-                                    value: `${contactInfo.message}`,
+                                    value: `${dto.message}`,
                                 },
                             ],
                         },
