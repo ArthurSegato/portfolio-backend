@@ -6,7 +6,7 @@
     "private": true,
     "license": "UNLICENSED",
     "engines": {
-        "node": "^20"
+        "node": "^18"
     },
     "scripts": {
         "build": "npx prisma generate && sleep 10 && npx prisma migrate deploy && sleep 10 && nest build",
