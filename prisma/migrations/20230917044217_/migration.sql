@@ -17,6 +17,7 @@ CREATE TABLE "Project" (
     "techStack" TEXT[],
     "size" DOUBLE PRECISION,
     "sizeUnit" "Unit",
+    "embeds" TEXT[],
 
     CONSTRAINT "Project_pkey" PRIMARY KEY ("id")
 );
