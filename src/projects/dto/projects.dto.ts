@@ -1,16 +1,5 @@
-import { Type } from 'class-transformer';
-import {
-    IsArray,
-    IsEnum,
-    IsInt,
-    IsNotEmpty,
-    IsNumber,
-    IsOptional,
-    IsString,
-    IsStrongPassword,
-    IsUrl,
-    ValidateNested,
-} from 'class-validator';
+import { Type } from "class-transformer";
+import { IsArray, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, IsStrongPassword, IsUrl, ValidateNested } from "class-validator";
 
 enum Category {
     GAMEDEV,
@@ -18,16 +7,15 @@ enum Category {
     MOBILE,
     BOT,
     LOCALIZATION,
-    UI,
-    UX,
-    DESIGN
+    UIUX,
+    DESIGN,
 }
 
 enum Unit {
     B,
     KB,
     MB,
-    GB
+    GB,
 }
 
 export class LinkDto {
@@ -43,7 +31,7 @@ export class LinkDto {
 export class ProjectsDto {
     @IsNotEmpty()
     @IsStrongPassword()
-    key: string
+    key: string;
 
     @IsNotEmpty()
     @IsString()
