@@ -10,7 +10,7 @@ import { ServeStaticModule } from "@nestjs/serve-static";
 import { CacheInterceptor, CacheModule } from "@nestjs/cache-manager";
 import { join } from "path";
 import { APP_INTERCEPTOR } from "@nestjs/core";
-import { EastereggModule } from './easteregg/easteregg.module';
+import { EastereggModule } from "./easteregg/easteregg.module";
 
 @Module({
     imports: [
@@ -27,14 +27,16 @@ import { EastereggModule } from './easteregg/easteregg.module';
             rootPath: join(__dirname, "../public"),
             serveRoot: "/",
         }),
-        EastereggModule /*CacheModule.register()*/,
+        EastereggModule,
+        CacheModule.register(),
     ],
     controllers: [ProjectsController],
     providers: [
-        ProjectsService /*{
-    provide: APP_INTERCEPTOR,
-    useClass: CacheInterceptor
-  }*/,
+        ProjectsService,
+        {
+            provide: APP_INTERCEPTOR,
+            useClass: CacheInterceptor,
+        },
     ],
 })
 export class AppModule {}
