@@ -4,13 +4,9 @@ import { ProjectsController } from "./projects/projects.controller";
 import { ProjectsService } from "./projects/projects.service";
 import { ProjectsModule } from "./projects/projects.module";
 import { PrismaModule } from "./prisma/prisma.module";
-import { ContactModule } from "./contact/contact.module";
 import { MulterModule } from "@nestjs/platform-express";
-import { ServeStaticModule } from "@nestjs/serve-static";
 import { CacheInterceptor, CacheModule } from "@nestjs/cache-manager";
-import { join } from "path";
 import { APP_INTERCEPTOR } from "@nestjs/core";
-import { EastereggModule } from "./easteregg/easteregg.module";
 
 @Module({
     imports: [
@@ -19,15 +15,9 @@ import { EastereggModule } from "./easteregg/easteregg.module";
         ConfigModule.forRoot({
             isGlobal: true,
         }),
-        ContactModule,
         MulterModule.register({
-            dest: "./public",
+            storage: false,
         }),
-        ServeStaticModule.forRoot({
-            rootPath: join(__dirname, "../public"),
-            serveRoot: "/",
-        }),
-        EastereggModule,
         CacheModule.register(),
     ],
     controllers: [ProjectsController],

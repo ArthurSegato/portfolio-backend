@@ -6,12 +6,13 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 model Project {
-  id              Int      @id @default(autoincrement())
+  id              Int         @id @default(autoincrement())
   name            String
   description     String
   longDescription String
@@ -23,7 +24,8 @@ model Project {
   size            Float?
   sizeUnit        Unit?
   links           Link[]
-  card            Card?
+  card            String?
+  metaImages      MetaImages?
   cover           Cover?
   assets          Asset[]
   embeds          String[]
@@ -37,32 +39,34 @@ model Link {
   url       String
 }
 
-model Card {
-  id        Int     @id @default(autoincrement())
-  project   Project @relation(fields: [projectId], references: [id])
-  projectId Int     @unique
-  name      String
-  mimetype  String
-  url       String
-}
-
 model Cover {
   id        Int     @id @default(autoincrement())
   project   Project @relation(fields: [projectId], references: [id])
   projectId Int     @unique
-  name      String
-  mimetype  String
   url       String
+  poster    String
+}
+
+model MetaImages {
+  id          Int     @id @default(autoincrement())
+  project     Project @relation(fields: [projectId], references: [id])
+  projectId   Int     @unique
+  facebookUrl String
+  facebookAlt String
+  twitterUrl  String
+  twitterAlt  String
+  googleUrl   String
 }
 
 model Asset {
   id        Int     @id @default(autoincrement())
   project   Project @relation(fields: [projectId], references: [id])
   projectId Int
-  name      String
-  mimetype  String
   url       String
+  mimetype  String
   alt       String
+  title     String
+  poster    String?
 }
 
 enum Category {
